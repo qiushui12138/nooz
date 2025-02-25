@@ -1,0 +1,23 @@
+# Python环境文件
+/.venv
+
+# 隔离所有 IDE 配置文件
+/.idea/**
+/.idea/.gitignore
+/.idea/vcs.xml
+
+# SQLlite 数据保存本地
+*.db
+
+# 本地配置文件不上传
+config/config.ini
+config/proxies.json
+
+# 隔离log
+*.log
+/app.log
+
+# 隔离打包文件
+/build/*
+/build_install/*
+/dist/*
