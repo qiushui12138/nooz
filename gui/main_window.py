@@ -5,7 +5,7 @@ from typing import Set
 
 import pandas as pd
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QAction
+from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
@@ -13,11 +13,10 @@ from PyQt6.QtWidgets import (
     QScrollArea,
     QGridLayout,
     QMessageBox,
-    QTableWidgetItem,
     QFileDialog,
-    QInputDialog,
     QDockWidget,
     QWidget,
+    QApplication,
 )
 
 from core.work_thread import WorkerThread
@@ -27,6 +26,7 @@ from gui.components.log_group import LogGroup
 from gui.components.preview_group import PreviewGroup
 from gui.components.sidebar import Sidebar
 from gui.styles.modern_style import ModernStyle
+from gui.tools.balance_checker import BalanceChecker
 from infrastructure.qt_log import sing
 
 
@@ -87,13 +87,42 @@ class MainWindow(QMainWindow):
         self.toggle_log_action.triggered.connect(self.toggle_log_dock)
         view_menu.addAction(self.toggle_log_action)
 
+        # 添加帮助菜单
+        help_menu = self.menuBar().addMenu("帮助")
+        check_update_action = QAction("检查更新", self)
+        check_update_action.triggered.connect(self.check_for_updates)
+        help_menu.addAction(check_update_action)
+
         # 连接日志窗口可见性变化信号
         self.log_dock.visibilityChanged.connect(self.on_log_dock_visibility_changed)
 
+    def check_for_updates(self):
+        """检查更新"""
+        from gui.dialogs.update_dialog import UpdateDialog
+
+        dialog = UpdateDialog(self)
+        dialog.exec()
+
     def init_ui(self):
         """初始化用户界面"""
-        self.setWindowTitle("Sahara Automation")
-        self.setGeometry(100, 100, 1400, 900)
+        # 设置窗口标题和图标
+        self.setWindowTitle("Nooz")
+        icon_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "static", "iconfull.ico"
+        )
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+
+        # 设置窗口大小和位置
+        screen = QApplication.primaryScreen().geometry()
+        window_width = int(screen.width() * 0.8)
+        window_height = int(screen.height() * 0.8)
+        self.setGeometry(
+            (screen.width() - window_width) // 2,
+            (screen.height() - window_height) // 2,
+            window_width,
+            window_height,
+        )
 
         # 创建主分割器
         main_splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -163,7 +192,7 @@ class MainWindow(QMainWindow):
     def setup_signals(self):
         """设置信号连接"""
         # 文件操作信号
-        self.file_group.import_btn.clicked.connect(self.import_excel)
+        self.file_group.excel_loaded.connect(self.on_excel_loaded)
 
         # 任务控制信号
         self.control_group.start_btn.clicked.connect(self.start_task)
@@ -175,6 +204,11 @@ class MainWindow(QMainWindow):
 
         # 侧边栏信号
         sing.menu_selected.connect(self.on_menu_selected)
+
+    def on_excel_loaded(self, data, total_rows):
+        """处理Excel加载完成事件"""
+        self.excel_data = data
+        self.control_group.set_row_input(f"1-{total_rows}")
 
     def on_menu_selected(self, primary_text, secondary_text):
         """处理菜单选择事件"""
@@ -204,8 +238,30 @@ class MainWindow(QMainWindow):
         self.control_group.setVisible(False)
         self.preview_group.setVisible(False)
 
-        # TODO: 根据工具名称显示对应的工具页面
-        self.show_info(f"工具页面：{tool_name} - 开发中")
+        # 隐藏所有工具和设置组件
+        if hasattr(self, "balance_checker"):
+            self.balance_checker.setVisible(False)
+        if hasattr(self, "gas_monitor"):
+            self.gas_monitor.setVisible(False)
+        if hasattr(self, "proxy_settings"):
+            self.proxy_settings.setVisible(False)
+        if hasattr(self, "local_settings"):
+            self.local_settings.setVisible(False)
+
+        if tool_name == "余额查询":
+            if not hasattr(self, "balance_checker"):
+                self.balance_checker = BalanceChecker()
+                self.work_layout.addWidget(self.balance_checker, 0, 0)
+            self.balance_checker.setVisible(True)
+        elif tool_name == "Gas监控":
+            from gui.tools.gas_monitor import GasMonitor
+
+            if not hasattr(self, "gas_monitor"):
+                self.gas_monitor = GasMonitor()
+                self.work_layout.addWidget(self.gas_monitor, 0, 0)
+            self.gas_monitor.setVisible(True)
+        else:
+            self.show_info(f"工具页面：{tool_name} - 开发中")
 
     def show_settings_page(self, setting_name):
         """显示设置页面"""
@@ -238,19 +294,21 @@ class MainWindow(QMainWindow):
             self.log_dock.hide()
 
     def start_worker_thread(self, tasks, task_data):
-        """
-        启动工作线程以执行任务。
-        """
+        """启动工作线程以执行任务"""
         script_type = self.sidebar.currentScript()
         if not script_type:
             self.show_warning("请选择一个脚本！")
             return
 
         try:
+            # 获取预览配置
+            preview_config = self.preview_group.get_config()
+
             self.worker_thread = WorkerThread(
                 selected_options=tasks,
                 data=task_data,
                 script_type=script_type,
+                preview_config=preview_config,  # 传入预览配置
             )
             self.worker_thread.finished.connect(self.on_task_finished)
             self.worker_thread.started.connect(self.on_task_started)
@@ -323,39 +381,6 @@ class MainWindow(QMainWindow):
                 event.ignore()
         else:
             event.accept()
-
-    def import_excel(self):
-        """导入Excel文件"""
-        file_path, _ = QFileDialog.getOpenFileName(
-            self, "选择 Excel 文件", "", "Excel 文件 (*.xlsx *.xls)"
-        )
-        if file_path:
-            self.load_excel_data(file_path)
-
-    def load_excel_data(self, file_path: str):
-        """加载Excel数据"""
-        file_path = os.path.normpath(os.path.abspath(file_path))
-        if not os.path.isfile(file_path):
-            self.show_error("文件不存在")
-            return
-        try:
-            sheets = pd.ExcelFile(file_path).sheet_names
-            sheet_name, ok = QInputDialog.getItem(
-                self, "选择工作表", "请选择工作表:", sheets, 0, False
-            )
-            if ok and sheet_name:
-                df = pd.read_excel(file_path, sheet_name=sheet_name)
-                self.excel_data = df.iloc[:, :3].dropna().values.tolist()
-                self.control_group.set_row_input(f"1-{len(self.excel_data)}")
-                self.file_group.file_label.setText(
-                    f"已加载: {os.path.basename(file_path)}"
-                )
-        except FileNotFoundError:
-            self.show_error("文件未找到")
-        except pd.errors.EmptyDataError:
-            self.show_error("Excel文件为空")
-        except Exception as e:
-            self.show_error(f"未知错误: {str(e)}")
 
     def validate_selection(self, selection: str) -> Set[int]:
         """验证行选择输入"""

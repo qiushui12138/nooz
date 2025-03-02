@@ -7,7 +7,6 @@ from PyQt6.QtWidgets import (
 
 from config.task_manager import task_manager
 from infrastructure.qt_log import sing
-from gui.settings.proxy_settings import ProxySettings
 
 
 class Sidebar(QWidget):
@@ -84,12 +83,12 @@ class Sidebar(QWidget):
 
         # 工具二级菜单
         tools_menu = QListWidget()
-        tools_menu.addItems(["Galxe 工具", "桥工具"])
+        tools_menu.addItems(["余额查询", "Gas监控"])
         self.secondary_menu_stack.addWidget(tools_menu)
 
         # 设置二级菜单
         settings_menu = QListWidget()
-        settings_menu.addItems(["代理设置", "账户设置", "本地设置"])
+        settings_menu.addItems(["代理设置", "本地设置"])
         self.secondary_menu_stack.addWidget(settings_menu)
 
     def setup_signals(self):

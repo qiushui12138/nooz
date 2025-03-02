@@ -1,4 +1,5 @@
 import pandas as pd
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -88,49 +89,114 @@ class ProxySettings(QWidget):
         self.proxy_table.setHorizontalHeaderLabels(
             ["ADS_ID", "代理类型", "主机", "端口", "用户名", "密码"]
         )
+        # 设置表格行高和头部高度
+        self.proxy_table.verticalHeader().setDefaultSectionSize(40)  # 设置行高
+        self.proxy_table.horizontalHeader().setFixedHeight(45)  # 设置表头高度
 
         # 设置表格样式
         self.proxy_table.setStyleSheet(
             """
-            QTableWidget {
-                background-color: #1e1e1e;
-                border: 1px solid #3a3a3a;
-                border-radius: 4px;
-                gridline-color: #2d2d2d;
-                selection-background-color: #2d5a7b;
-            }
-            QTableWidget::item {
-                padding: 5px;
-                color: #ffffff;
-            }
-            QTableWidget::item:selected {
-                background-color: #2d5a7b;
-            }
-            QTableWidget::item:focus {
-                background-color: #2d5a7b;
-                border: none;
-                color: white;
-            }
-            QHeaderView::section {
-                background-color: #252525;
-                color: #ffffff;
-                padding: 8px;
-                border: none;
-                border-right: 1px solid #3a3a3a;
-                border-bottom: 1px solid #3a3a3a;
-            }
-            QTableWidget QLineEdit {
-                background-color: #2d2d2d;
-                color: #ffffff;
-                border: 1px solid #3a3a3a;
-                border-radius: 2px;
-                padding: 2px 4px;
-            }
-        """
+                QTableWidget {
+                    background-color: #2b2b2b;
+                    border: 1px solid #3d3d3d;
+                    border-radius: 6px;
+                    gridline-color: #3d3d3d;
+                }
+
+                QTableWidget::item {
+                    padding: 8px;
+                    color: #e0e0e0;
+                    border-bottom: 1px solid #3d3d3d;
+                }
+
+                QTableWidget::item:selected {
+                    background-color: #345f80;
+                    color: #ffffff;
+                }
+
+                QTableWidget::item:focus {
+                    background-color: #345f80;
+                    color: #ffffff;
+                    border: none;
+                }
+
+                QHeaderView::section {
+                    background-color: #232323;
+                    color: #e0e0e0;
+                    padding: 10px 8px;
+                    border: none;
+                    border-right: 1px solid #3d3d3d;
+                    border-bottom: 2px solid #4a4a4a;
+                    font-weight: bold;
+                }
+
+                QHeaderView::section:hover {
+                    background-color: #2d2d2d;
+                }
+
+                QTableWidget::item:alternate {
+                    background-color: #2f2f2f;
+                }
+
+                QTableWidget QLineEdit {
+                    background-color: #333333;
+                    color: #e0e0e0;
+                    border: 1px solid #4a4a4a;
+                    border-radius: 3px;
+                    padding: 3px 6px;
+                    selection-background-color: #345f80;
+                }
+
+                QScrollBar:vertical {
+                    border: none;
+                    background: #2b2b2b;
+                    width: 10px;
+                    margin: 0;
+                }
+
+                QScrollBar::handle:vertical {
+                    background: #4a4a4a;
+                    min-height: 30px;
+                    border-radius: 5px;
+                }
+
+                QScrollBar::handle:vertical:hover {
+                    background: #555555;
+                }
+
+                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                    height: 0;
+                }
+
+                QScrollBar:horizontal {
+                    border: none;
+                    background: #2b2b2b;
+                    height: 10px;
+                    margin: 0;
+                }
+
+                QScrollBar::handle:horizontal {
+                    background: #4a4a4a;
+                    min-width: 30px;
+                    border-radius: 5px;
+                }
+
+                QScrollBar::handle:horizontal:hover {
+                    background: #555555;
+                }
+
+                QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+                    width: 0;
+                }
+            """
         )
 
         # 设置表格属性
         self.proxy_table.setAlternatingRowColors(True)
+        self.proxy_table.setShowGrid(True)
+        self.proxy_table.setGridStyle(Qt.PenStyle.SolidLine)
+        self.proxy_table.horizontalHeader().setHighlightSections(False)
+        self.proxy_table.verticalHeader().setHighlightSections(False)
         self.proxy_table.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch
         )

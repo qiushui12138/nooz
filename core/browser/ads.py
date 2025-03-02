@@ -4,6 +4,7 @@ import requests
 
 from config.config import custom_config
 from infrastructure import ter_log
+from infrastructure.qt_log import sing
 
 """
     Author : RoyHe
@@ -36,19 +37,20 @@ class ADS:
             response.raise_for_status()
             data = response.json()
 
-            print(data)
+            logging.info(data)
             if data["code"] != 0:
                 raise ValueError("远程浏览器启动失败")
             return data["data"]["ws"]["puppeteer"]
-        except Exception:
-            return None
+        except Exception as e:
+            logging.error(e)
 
     def stop_remote_browser(self):
         """停止远程浏览器"""
         try:
             requests.get(f"{self.url}/browser/stop?user_id={self.user_id}")
-        except requests.RequestException:
-            logging.error(f"关闭浏览器失败: {self.user_id}")
+        except Exception as e:
+            sing.log_signal.emit(("ERROR", f"关闭浏览器失败: {self.user_id}"))
+            logging.error(e)
 
     def update_remote_browser(self):
         """更新环境信息"""
