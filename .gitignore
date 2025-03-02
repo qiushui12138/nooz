@@ -22,5 +22,4 @@ config/proxies.json
 /build_install/*
 /dist/*
 
-#
-/core/tasks/*
+

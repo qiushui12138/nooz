@@ -1,0 +1,48 @@
+{
+  "Sahara Legends": {
+    "name": "Sahara Legends",
+    "module": "core.tasks.legends",
+    "class": "Legends",
+    "tasks": [
+      {
+        "id": "legends",
+        "name": "日常访问任务",
+        "enabled": true
+      },
+      {
+        "id": "trans",
+        "name": "日常转账任务",
+        "enabled": true
+      },
+      {
+        "id": "claim",
+        "name": "领取碎片",
+        "enabled": true
+      }
+    ]
+  },
+  "Newton": {
+    "name": "Newton",
+    "module": "core.tasks.newton",
+    "class": "Newton",
+    "tasks": [
+      {
+        "id": "roll",
+        "name": "Newton 游戏任务",
+        "enabled": true
+      }
+    ]
+  },
+  "0G Lab": {
+    "name": "0GLab",
+    "module": "core.tasks.0G",
+    "class": "F0G",
+    "tasks": [
+      {
+        "id": "faucet",
+        "name": "0G Lab 领水",
+        "enabled": true
+      }
+    ]
+  }
+}
